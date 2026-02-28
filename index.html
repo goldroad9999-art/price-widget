@@ -6,91 +6,153 @@
 <title>오늘의 시세 (도매가, 100% 기준가)</title>
 
 <style>
+:root{
+  --border:#e8e8e8;
+  --muted:#6b7280;
+  --bg:#ffffff;
+  --head:#f7f7f7;
+  --up:#d32f2f;
+  --down:#1565c0;
+  --title:#111827;
+}
+
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
-  background:#ffffff;
-  color:#111;
+  background:var(--bg);
+  color:var(--title);
 }
 
-.wrap{
-  max-width:950px;
-  margin:auto;
-  padding:20px;
+.wrap{max-width:980px;margin:0 auto;padding:20px;}
+
+.top{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
 }
 
-h1{
+.hgroup h1{
+  margin:0;
   font-size:24px;
-  margin-bottom:10px;
-  font-weight:900;
+  font-weight:950;
+  letter-spacing:-0.3px;
+}
+.hgroup .sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.4;
 }
 
 .meta{
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:18px;
-  font-size:13px;
-  color:#555;
+  flex-direction:column;
+  gap:6px;
+  align-items:flex-end;
+  font-size:12.5px;
+  color:#374151;
+}
+.meta .line{
+  background:#f3f4f6;
+  border:1px solid #ededed;
+  border-radius:999px;
+  padding:6px 10px;
+  white-space:nowrap;
 }
 
 .table{
-  border:1px solid #eaeaea;
+  border:1px solid var(--border);
   border-radius:14px;
   overflow:hidden;
+  background:#fff;
 }
 
 .row{
   display:grid;
-  grid-template-columns:1.3fr 1fr 1fr;
-  padding:18px;
-  border-bottom:1px solid #eee;
+  grid-template-columns: 1.2fr 1fr 0.7fr;
+  gap:12px;
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
   align-items:center;
 }
 
 .row:last-child{border-bottom:none;}
-
 .head{
-  background:#f9f9f9;
+  background:var(--head);
   font-weight:900;
+  font-size:13px;
+  color:#111827;
 }
 
-.name{
-  font-size:18px;
-  font-weight:900;
+.kind .name{
+  font-weight:950;
+  font-size:17px;
+  letter-spacing:-0.2px;
 }
-
-.sub{
+.kind .unit{
+  margin-top:5px;
   font-size:12px;
-  color:#666;
-  margin-top:4px;
+  color:var(--muted);
 }
 
 .price{
   text-align:right;
   font-size:22px;
-  font-weight:900;
+  font-weight:950;
+  letter-spacing:-0.2px;
+}
+.price .perg{
+  margin-top:5px;
+  font-size:12px;
+  color:var(--muted);
+  font-weight:700;
 }
 
 .delta{
-  margin-top:6px;
-  font-size:12px;
-  font-weight:900;
+  text-align:right;
+  font-size:13px;
+  font-weight:950;
 }
-
-.up{color:#d32f2f;}
-.down{color:#1565c0;}
+.delta.up{color:var(--up);}
+.delta.down{color:var(--down);}
+.delta .tag{
+  display:inline-block;
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:950;
+  margin-left:6px;
+}
 
 .note{
-  margin-top:16px;
+  margin-top:14px;
+  color:#4b5563;
   font-size:13px;
-  color:#555;
-  line-height:1.6;
+  line-height:1.65;
 }
 
-@media(max-width:800px){
-  .row{grid-template-columns:1fr;}
-  .price{text-align:left;margin-top:8px;}
+.err{
+  margin-top:12px;
+  font-size:13px;
+  font-weight:900;
+  color:#b91c1c;
+  display:none;
+}
+
+/* Mobile */
+@media (max-width:820px){
+  .meta{align-items:flex-start}
+  .row{grid-template-columns:1fr; gap:10px;}
+  .head{display:none;}
+  .price, .delta{text-align:left;}
+  .price{display:flex; justify-content:space-between; align-items:baseline;}
+  .price::before{content:"기준가"; color:var(--muted); font-size:13px; font-weight:900;}
+  .delta{display:flex; justify-content:space-between; align-items:baseline;}
+  .delta::before{content:"전일 대비"; color:var(--muted); font-size:13px; font-weight:900;}
 }
 </style>
 </head>
@@ -98,89 +160,125 @@ h1{
 <body>
 <div class="wrap">
 
-<h1>오늘의 시세 (도매가, 100% 기준가)</h1>
+  <div class="top">
+    <div class="hgroup">
+      <h1>오늘의 시세 (도매가, 100% 기준가)</h1>
+      <div class="sub">국제 시세(USD/oz) + 환율 기반 자동 산출 · 안내용 기준가 표시</div>
+    </div>
 
-<div class="meta">
-  <div id="updated">업데이트: -</div>
-  <div id="fx">USD/KRW: -</div>
-  <div id="based">기준일: -</div>
-</div>
-
-<div class="table">
-  <div class="row head">
-    <div></div>
-    <div style="text-align:right;">기준가 (1돈 3.75g)</div>
-    <div style="text-align:right;">전일 대비</div>
+    <div class="meta">
+      <div class="line" id="based">기준일: -</div>
+      <div class="line" id="fx">USD/KRW: -</div>
+      <div class="line" id="updated">업데이트: -</div>
+    </div>
   </div>
-  <div id="rows"></div>
-</div>
 
-<div class="note">
-※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 <b>도매가(100% 기준가)</b>입니다.<br/>
-※ 실제 판매/매입가는 업체 정책·수량·가공비·프리미엄 등에 따라 달라질 수 있습니다.<br/>
-</div>
+  <div class="table">
+    <div class="row head">
+      <div></div>
+      <div style="text-align:right;">기준가 (1돈 3.75g)</div>
+      <div style="text-align:right;">전일 대비</div>
+    </div>
+    <div id="rows"></div>
+  </div>
 
+  <div class="note">
+    ※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 <b>도매가(100% 기준가)</b>입니다.<br/>
+    ※ 실제 판매/매입가는 업체 정책·수량·가공비·프리미엄 등에 따라 달라질 수 있습니다.<br/>
+    ※ 무료 데이터 특성상 종가 기준 또는 지연 반영될 수 있습니다. (표시 단위: 1돈=3.75g)
+  </div>
+
+  <div class="err" id="err"></div>
 </div>
 
 <script>
 const OZ_TO_G = 31.1034768;
 const DON = 3.75;
 
-const fmt = n=>new Intl.NumberFormat("ko-KR").format(Math.round(n))+"원";
-const fmtFx = n=>new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
+const fmtKRW = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
+const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
+
+const rowsEl = document.getElementById("rows");
+const errEl = document.getElementById("err");
 
 async function fetchFx(){
-  const r=await fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"});
-  const j=await r.json();
+  const r = await fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" });
+  const j = await r.json();
+  if (j?.result !== "success" || !j?.rates?.KRW) throw new Error("환율을 불러오지 못했어요.");
   return j.rates.KRW;
 }
 
 async function fetchMetal(symbol){
-  const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`,{cache:"no-store"});
-  return r.json();
+  const r = await fetch(`/.netlify/functions/metal?symbol=${encodeURIComponent(symbol)}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(`시세 함수 오류(${symbol})`);
+  return r.json(); // {date, close, change_pct, ...}
 }
 
-function buildRow(title, perDon, changePct){
-  const up = changePct>=0;
-  const cls = up?"up":"down";
-  const arrow = up?"▲":"▼";
+function deltaText(changePct){
+  const up = changePct >= 0;
+  const cls = up ? "up" : "down";
+  const arrow = up ? "▲" : "▼";
+  const absPct = Math.abs(changePct).toFixed(2);
+  return { cls, text: `${arrow} ${absPct}%`, tag: up ? "상승" : "하락" };
+}
+
+function rowHtml(title, perDonKRW, changePct){
+  const { cls, text, tag } = deltaText(changePct);
+  const perG = perDonKRW / DON;
 
   return `
-  <div class="row">
-    <div>
-      <div class="name">${title}</div>
-      <div class="sub">1돈(3.75g)</div>
+    <div class="row">
+      <div class="kind">
+        <div class="name">${title}</div>
+        <div class="unit">1돈(3.75g) · 1g ≈ ${fmtKRW(perG)}</div>
+      </div>
+      <div class="price">
+        ${fmtKRW(perDonKRW)}
+        <div class="perg">1g 기준가: ${fmtKRW(perG)}</div>
+      </div>
+      <div class="delta ${cls}">
+        ${text}<span class="tag">${tag}</span>
+      </div>
     </div>
-    <div class="price">${fmt(perDon)}</div>
-    <div class="delta ${cls}">${arrow} ${Math.abs(changePct).toFixed(2)}%</div>
-  </div>`;
+  `;
 }
 
 async function render(){
-  const fx = await fetchFx();
-  const gold = await fetchMetal("xauusd");
-  const silver = await fetchMetal("xagusd");
-  const plat = await fetchMetal("xptusd");
+  try{
+    errEl.style.display = "none";
+    errEl.textContent = "";
 
-  document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
-  document.getElementById("updated").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
-  document.getElementById("based").textContent="기준일: "+gold.date;
+    const [fx, gold, silver, plat] = await Promise.all([
+      fetchFx(),
+      fetchMetal("xauusd"),
+      fetchMetal("xagusd"),
+      fetchMetal("xptusd"),
+    ]);
 
-  const goldPerDon=(gold.close*fx)/OZ_TO_G*DON;
-  const silverPerDon=(silver.close*fx)/OZ_TO_G*DON;
-  const platPerDon=(plat.close*fx)/OZ_TO_G*DON;
+    const baseDate = [gold?.date, silver?.date, plat?.date].filter(Boolean).sort().pop() || "-";
+    document.getElementById("based").textContent = `기준일: ${baseDate}`;
+    document.getElementById("fx").textContent = `USD/KRW: ${fmtFx(fx)}`;
+    document.getElementById("updated").textContent = `업데이트: ${new Date().toLocaleString("ko-KR")}`;
 
-  document.getElementById("rows").innerHTML=
-    buildRow("순금 시세",goldPerDon,gold.change_pct)+
-    buildRow("18K 금 시세",goldPerDon*(18/24),gold.change_pct)+
-    buildRow("14K 금 시세",goldPerDon*(14/24),gold.change_pct)+
-    buildRow("백금 시세",platPerDon,plat.change_pct)+
-    buildRow("은 시세",silverPerDon,silver.change_pct);
+    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON;
+    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON;
+    const platPerDon = (plat.close * fx) / OZ_TO_G * DON;
+
+    rowsEl.innerHTML =
+      rowHtml("순금 시세", goldPerDon, gold.change_pct) +
+      rowHtml("18K 금 시세", goldPerDon * (18/24), gold.change_pct) +
+      rowHtml("14K 금 시세", goldPerDon * (14/24), gold.change_pct) +
+      rowHtml("백금 시세", platPerDon, plat.change_pct) +
+      rowHtml("은 시세", silverPerDon, silver.change_pct);
+
+  }catch(e){
+    errEl.style.display = "block";
+    errEl.textContent = "시세를 불러오지 못했어요: " + (e?.message || e);
+  }
 }
 
 render();
-setInterval(render,600000);
+setInterval(render, 10 * 60 * 1000); // 10분마다
 </script>
-
 </body>
 </html>
