@@ -31,19 +31,16 @@ h1{
 
 .cards{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(3,1fr); /* 모바일도 3칸 */
   gap:10px;
 }
 
-/* 모바일 글자 축소 */
-@media(max-width:520px){
-  .card{ padding:14px; border-radius:14px; }
-  .title{ font-size:14px; }
-  .sub{ font-size:11px; }
-  .price{ font-size:16px; margin-top:10px; }
-  .perg{ font-size:12px; }
-  .delta{ font-size:12px; }
+/* 너무 작은 폰에서는 2칸이 더 보기 좋으면 주석 해제 */
+/*
+@media(max-width:360px){
+  .cards{grid-template-columns:repeat(2,1fr);}
 }
+*/
 
 .card{
   background:#171a21;
@@ -84,17 +81,13 @@ h1{
   color:#d1d5db;
   font-weight:800;
 }
-
-.perg span{
-  color:#9ca3af;
-}
+.perg span{ color:#9ca3af; }
 
 .delta{
   margin-top:10px;
   font-weight:900;
   font-size:14px;
 }
-
 .up{color:#ff5252;}
 .down{color:#4dabf7;}
 
@@ -103,6 +96,16 @@ h1{
   font-size:12px;
   color:#9ca3af;
   line-height:1.6;
+}
+
+/* 모바일 글자 축소 */
+@media(max-width:520px){
+  .card{ padding:14px; border-radius:14px; }
+  .title{ font-size:14px; }
+  .sub{ font-size:11px; }
+  .price{ font-size:16px; margin-top:10px; }
+  .perg{ font-size:12px; }
+  .delta{ font-size:12px; }
 }
 </style>
 </head>
@@ -122,7 +125,7 @@ h1{
 
 <div class="note">
 ※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 기준가 입니다.<br>
-※ 실제 판매/매입가는 업체 정책·수량·가공비 등에 따라 달라질 수 있습니다.<br>
+※ 실제 판매/매입가는 업체 정책·수량·가공비 등에 따라 달라질 수 있습니다.
 </div>
 
 </div>
@@ -136,25 +139,25 @@ const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
 
-const fmt = n=>new Intl.NumberFormat("ko-KR").format(Math.round(n))+"원";
-const fmtFx = n=>new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
+const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
+const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
 
 async function fetchFx(){
-  const r=await fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"});
-  const j=await r.json();
+  const r = await fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" });
+  const j = await r.json();
   return j.rates.KRW;
 }
 async function fetchMetal(symbol){
-  const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`,{cache:"no-store"});
+  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`, { cache: "no-store" });
   return r.json();
 }
 
 function cardHtml(title, perDonPrice, changePct){
   const perG = perDonPrice / DON;
 
-  const up = changePct>=0;
-  const cls = up?"up":"down";
-  const arrow = up?"▲":"▼";
+  const up = changePct >= 0;
+  const cls = up ? "up" : "down";
+  const arrow = up ? "▲" : "▼";
 
   return `
   <div class="card">
@@ -175,22 +178,22 @@ async function render(){
   const silver = await fetchMetal("xagusd");
   const plat = await fetchMetal("xptusd");
 
-  document.getElementById("date").textContent="기준일: "+gold.date;
-  document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
-  document.getElementById("update").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
+  document.getElementById("date").textContent = "기준일: " + gold.date;
+  document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
+  document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-  const goldPerDon=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
-  const silverPerDon=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
-  const platPerDon=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
+  const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
+  const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
+  const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
 
-  document.getElementById("cards").innerHTML=
-    cardHtml("순금 시세",goldPerDon,gold.change_pct)+
-    cardHtml("백금 시세",platPerDon,plat.change_pct)+
-    cardHtml("은 시세",silverPerDon,silver.change_pct);
+  document.getElementById("cards").innerHTML =
+    cardHtml("순금 시세", goldPerDon, gold.change_pct) +
+    cardHtml("백금 시세", platPerDon, plat.change_pct) +
+    cardHtml("은 시세", silverPerDon, silver.change_pct);
 }
 
 render();
-setInterval(render,600000);
+setInterval(render, 600000);
 </script>
 
 </body>
