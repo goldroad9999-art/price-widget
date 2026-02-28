@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>오늘의 시세 (도매가, 100% 기준가)</title>
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+  background:#fff;
+}
+.wrap{max-width:900px;margin:auto;padding:20px;}
+h1{font-size:22px;margin-bottom:15px;}
+.table{border:1px solid #eee;border-radius:12px;overflow:hidden;}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:16px;border-bottom:1px solid #eee;align-items:center;}
+.row:last-child{border-bottom:none;}
+.head{background:#fafafa;font-weight:700;}
+.name{font-weight:800;font-size:18px;}
+.sub{color:#666;font-size:13px;margin-top:4px;line-height:1.35;}
+.price{font-size:22px;font-weight:900;}
+.note{margin-top:12px;font-size:13px;color:#666;line-height:1.5;}
+.err{margin-top:12px;font-size:13px;color:#b91c1c;font-weight:700;display:none;}
+.meta{margin-top:8px;font-size:12px;color:#666;display:flex;gap:10px;flex-wrap:wrap;}
+.pill{background:#f3f4f6;border-radius:999px;padding:4px 10px;}
+@media (max-width:760px){
+  .row{grid-template-columns:1fr;gap:10px;}
+  .price{display:flex;justify-content:space-between;align-items:baseline;}
+  .price::before{content:attr(data-label);font-size:13px;color:#666;font-weight:700;}
+  .head{display:none;}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>오늘의 시세 (도매가, 100% 기준가)</h1>
+
+  <div class="meta">
+    <div class="pill" id="updatedAt">업데이트: -</div>
+    <div class="pill" id="usdkrw">USD/KRW: -</div>
+    <div class="pill" id="source">Source: Stooq + open.er-api</div>
+  </div>
+
+  <div class="table">
+    <div class="row head">
+      <div></div>
+      <div>내가 살 때 (VAT 포함)</div>
+      <div>내가 팔 때</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="note">
+    ※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 도매가(100% 기준가)입니다. 실제 판매가는 상품/수량/가공비/프리미엄에 따라 달라질 수 있습니다.<br/>
+    ※ 무료 데이터 특성상 실시간이 아닌 “종가/지연”일 수 있습니다.
+  </div>
+
+  <div class="err" id="err"></div>
+</div>
+
+<script>
+/** 판매용 세팅(원하면 숫자만 바꾸면 됨) */
+const VAT_RATE = 0.10;       // 10% 부가세
+const BUY_PREMIUM = 0.015;   // 살 때 +1.5%
+const SELL_DISCOUNT = 0.015; // 팔 때 -1.5%
+
+/** 단위 */
+const OZ_TO_G = 31.1034768;
+const DON = 3.75;
+
+const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
+const fmtFx = n => new Intl.NumberFormat("ko-KR", {maximumFractionDigits:2}).format(n);
+
+const errEl = document.getElementById("err");
+const rowsEl = document.getElementById("rows");
+const updatedAtEl = document.getElementById("updatedAt");
+const usdkrwEl = document.getElementById("usdkrw");
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>오늘의 시세 (도매가, 100% 기준가)</title>
+
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:#fff;}
+.wrap{max-width:900px;margin:auto;padding:20px;}
+h1{font-size:22px;margin-bottom:12px;}
+.meta{margin:6px 0 14px;font-size:12px;color:#666;display:flex;gap:10px;flex-wrap:wrap;}
+.pill{background:#f3f4f6;border-radius:999px;padding:4px 10px;}
+.table{border:1px solid #eee;border-radius:12px;overflow:hidden;}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:16px;border-bottom:1px solid #eee;align-items:center;}
+.row:last-child{border-bottom:none;}
+.head{background:#fafafa;font-weight:700;}
+.name{font-weight:800;font-size:18px;}
+.sub{color:#666;font-size:13px;margin-top:4px;line-height:1.35;}
+.price{font-size:22px;font-weight:900;}
+.note{margin-top:12px;font-size:13px;color:#666;line-height:1.5;}
+.err{margin-top:12px;font-size:13px;color:#b91c1c;font-weight:700;display:none;}
+@media (max-width:760px){
+  .row{grid-template-columns:1fr;gap:10px;}
+  .price{display:flex;justify-content:space-between;align-items:baseline;}
+  .price::before{content:attr(data-label);font-size:13px;color:#666;font-weight:700;}
+  .head{display:none;}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>오늘의 시세 (도매가, 100% 기준가)</h1>
+
+  <div class="meta">
+    <div class="pill" id="updatedAt">업데이트: -</div>
+    <div class="pill" id="usdkrw">USD/KRW: -</div>
+    <div class="pill">Source: Stooq (via Netlify Function) + open.er-api</div>
+  </div>
+
+  <div class="table">
+    <div class="row head">
+      <div></div>
+      <div>내가 살 때 (VAT 포함)</div>
+      <div>내가 팔 때</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="note">
+    ※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 도매가(100% 기준가)입니다. 실제 판매가는 상품/수량/가공비/프리미엄에 따라 달라질 수 있습니다.<br/>
+    ※ 무료 데이터 특성상 실시간이 아닌 “종가/지연”일 수 있습니다.
+  </div>
+
+  <div class="err" id="err"></div>
+</div>
+
+<script>
+const VAT_RATE = 0.10;
+const BUY_PREMIUM = 0.015;
+const SELL_DISCOUNT = 0.015;
+
+const OZ_TO_G = 31.1034768;
+const DON = 3.75;
+
+const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
+const fmtFx = n => new Intl.NumberFormat("ko-KR", {maximumFractionDigits:2}).format(n);
+
+const errEl = document.getElementById("err");
+const rowsEl = document.getElementById("rows");
+const updatedAtEl = document.getElementById("updatedAt");
+const usdkrwEl = document.getElementById("usdkrw");
+
+async function fetchUsdKrw(){
+  const r = await fetch("https://open.er-api.com/v6/latest/USD", {cache:"no-store"});
+  const j = await r.json();
+  if(j?.result !== "success" || !j?.rates?.KRW) throw new Error("환율을 불러오지 못했어요.");
+  return j.rates.KRW;
+}
+
+// ✅ CORS 문제 해결: Stooq를 브라우저가 직접 호출하지 않고,
+//    Netlify Function(우리 도메인)에서 대신 호출한 값을 가져옴.
+async function fetchMetalUsdPerOz(symbol){
+  const r = await fetch(`/.netlify/functions/metal?symbol=${encodeURIComponent(symbol)}`, {cache:"no-store"});
+  if(!r.ok) throw new Error(`시세 함수 호출 실패 (${symbol})`);
+  const j = await r.json();
+  if(!j?.close) throw new Error(`시세 데이터 없음 (${symbol})`);
+  return j; // { date, close }
+}
+
+function buildRow(title, perDonKRW, subText){
+  const buy = perDonKRW * (1 + BUY_PREMIUM) * (1 + VAT_RATE);
+  const sell = perDonKRW * (1 - SELL_DISCOUNT);
+  return `
+    <div class="row">
+      <div>
+        <div class="name">${title}</div>
+        <div class="sub">${subText}</div>
+      </div>
+      <div class="price" data-label="살 때">${fmt(buy)}</div>
+      <div class="price" data-label="팔 때">${fmt(sell)}</div>
+    </div>
+  `;
+}
+
+async function render(){
+  try{
+    errEl.style.display = "none";
+    errEl.textContent = "";
+
+    const usdkrw = await fetchUsdKrw();
+    usdkrwEl.textContent = `USD/KRW: ${fmtFx(usdkrw)}`;
+
+    const [gold, silver, platinum] = await Promise.all([
+      fetchMetalUsdPerOz("xauusd"),
+      fetchMetalUsdPerOz("xagusd"),
+      fetchMetalUsdPerOz("xptusd"),
+    ]);
+
+    const goldPerDon = (gold.close * usdkrw) / OZ_TO_G * DON;
+    const silverPerDon = (silver.close * usdkrw) / OZ_TO_G * DON;
+    const platPerDon = (platinum.close * usdkrw) / OZ_TO_G * DON;
+
+    const gold1gBuy = (gold.close * usdkrw) / OZ_TO_G * (1 + BUY_PREMIUM) * (1 + VAT_RATE);
+    const silver1gBuy = (silver.close * usdkrw) / OZ_TO_G * (1 + BUY_PREMIUM) * (1 + VAT_RATE);
+    const plat1gBuy = (platinum.close * usdkrw) / OZ_TO_G * (1 + BUY_PREMIUM) * (1 + VAT_RATE);
+
+    rowsEl.innerHTML =
+      buildRow("순금시세", goldPerDon, `Gold 24K · 3.75g(1돈) / 1g≈${fmt(gold1gBuy)} · 기준일 ${gold.date}`) +
+      buildRow("18K 금시세", goldPerDon * (18/24), `Gold 18K · 3.75g(1돈) / 1g≈${fmt(gold1gBuy*(18/24))} · 기준일 ${gold.date}`) +
+      buildRow("14K 금시세", goldPerDon * (14/24), `Gold 14K · 3.75g(1돈) / 1g≈${fmt(gold1gBuy*(14/24))} · 기준일 ${gold.date}`) +
+      buildRow("백금시세", platPerDon, `Platinum · 3.75g(1돈) / 1g≈${fmt(plat1gBuy)} · 기준일 ${platinum.date}`) +
+      buildRow("은시세", silverPerDon, `Silver · 3.75g(1돈) / 1g≈${fmt(silver1gBuy)} · 기준일 ${silver.date}`);
+
+    updatedAtEl.textContent = `업데이트: ${new Date().toLocaleString("ko-KR")}`;
+  }catch(e){
+    errEl.style.display = "block";
+    errEl.textContent = "시세를 불러오지 못했어요: " + (e?.message || e);
+  }
+}
+
+render();
+setInterval(render, 10 * 60 * 1000); // 10분마다
+</script>
+</body>
+</html>
