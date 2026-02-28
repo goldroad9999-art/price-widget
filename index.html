@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>오늘의 시세 (도매가, 100% 기준가)</title>
+<title>오늘의 시세 (VAT 별도)</title>
 
 <style>
 body{
@@ -15,21 +15,17 @@ body{
 
 .wrap{max-width:1100px;margin:auto;padding:20px;}
 
-h1{font-size:24px;font-weight:900;margin-bottom:6px;}
+h1{font-size:22px;font-weight:900;margin-bottom:6px;}
 
-.meta{font-size:13px;color:#555;margin-bottom:20px;line-height:1.6;}
+.meta{font-size:12px;color:#555;margin-bottom:20px;line-height:1.6;}
 
 .cards{
   display:grid;
   grid-template-columns:1fr;
   gap:18px;
 }
-
-/* 🔥 데스크탑 3칸 정렬 */
 @media(min-width:900px){
-  .cards{
-    grid-template-columns:repeat(3,1fr);
-  }
+  .cards{grid-template-columns:repeat(3,1fr);}
 }
 
 .card{
@@ -38,40 +34,40 @@ h1{font-size:24px;font-weight:900;margin-bottom:6px;}
   padding:22px;
   transition:0.2s;
 }
+.card:hover{box-shadow:0 10px 25px rgba(0,0,0,0.06);}
 
-.card:hover{
-  box-shadow:0 10px 25px rgba(0,0,0,0.06);
-}
-
-.title{
-  font-size:18px;
-  font-weight:900;
-}
-
-.sub{
-  font-size:12px;
-  color:#666;
-  margin-top:4px;
-}
+.title{font-size:17px;font-weight:900;}
+.sub{font-size:12px;color:#666;margin-top:4px;}
 
 .price{
-  font-size:28px;
+  font-size:25px;
   font-weight:900;
   margin-top:16px;
+  letter-spacing:-0.3px;
+}
+
+.perg{
+  margin-top:8px;
+  font-size:14px;
+  color:#374151;
+  font-weight:800;
+}
+.perg span{
+  color:#6b7280;
+  font-weight:800;
 }
 
 .delta{
-  margin-top:8px;
+  margin-top:10px;
   font-weight:900;
   font-size:14px;
 }
-
 .up{color:#d32f2f;}
 .down{color:#1565c0;}
 
 .note{
-  margin-top:24px;
-  font-size:13px;
+  margin-top:22px;
+  font-size:12px;
   color:#555;
   line-height:1.6;
 }
@@ -94,6 +90,7 @@ h1{font-size:24px;font-weight:900;margin-bottom:6px;}
 <div class="note">
 ※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 도매가(100% 기준가)입니다.<br>
 ※ 실제 판매/매입가는 업체 정책·수량·가공비 등에 따라 달라질 수 있습니다.<br>
+※ 무료 데이터 특성상 종가 기준 또는 지연 반영될 수 있습니다.
 </div>
 
 </div>
@@ -115,14 +112,15 @@ async function fetchFx(){
   const j=await r.json();
   return j.rates.KRW;
 }
-
 async function fetchMetal(symbol){
   const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`,{cache:"no-store"});
   return r.json();
 }
 
-function cardHtml(title, price, change){
-  const up = change>=0;
+function cardHtml(title, perDonPrice, changePct){
+  const perG = perDonPrice / DON;
+
+  const up = changePct>=0;
   const cls = up?"up":"down";
   const arrow = up?"▲":"▼";
 
@@ -130,8 +128,12 @@ function cardHtml(title, price, change){
   <div class="card">
     <div class="title">${title}</div>
     <div class="sub">1돈(3.75g) 기준</div>
-    <div class="price">${fmt(price)}</div>
-    <div class="delta ${cls}">${arrow} ${Math.abs(change).toFixed(2)}%</div>
+
+    <div class="price">${fmt(perDonPrice)}</div>
+
+    <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
+
+    <div class="delta ${cls}">${arrow} ${Math.abs(changePct).toFixed(2)}%</div>
   </div>`;
 }
 
@@ -145,14 +147,14 @@ async function render(){
   document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
   document.getElementById("update").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
 
-  const goldPrice=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
-  const silverPrice=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
-  const platPrice=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
+  const goldPerDon=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
+  const silverPerDon=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
+  const platPerDon=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
 
   document.getElementById("cards").innerHTML=
-    cardHtml("순금 시세",goldPrice,gold.change_pct)+
-    cardHtml("백금 시세",platPrice,plat.change_pct)+
-    cardHtml("은 시세",silverPrice,silver.change_pct);
+    cardHtml("순금 시세",goldPerDon,gold.change_pct)+
+    cardHtml("백금 시세",platPerDon,plat.change_pct)+
+    cardHtml("은 시세",silverPerDon,silver.change_pct);
 }
 
 render();
