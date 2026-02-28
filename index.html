@@ -9,52 +9,84 @@
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
-  background:#fff;
-  color:#111;
+  background:#0f1115;
+  color:#f5f5f5;
 }
 
 .wrap{max-width:1100px;margin:auto;padding:20px;}
 
-h1{font-size:22px;font-weight:900;margin-bottom:6px;}
+h1{
+  font-size:22px;
+  font-weight:900;
+  margin-bottom:6px;
+  color:#ffffff;
+}
 
-.meta{font-size:12px;color:#555;margin-bottom:20px;line-height:1.6;}
+.meta{
+  font-size:12px;
+  color:#a1a1aa;
+  margin-bottom:20px;
+  line-height:1.6;
+}
 
 .cards{
   display:grid;
-  grid-template-columns:1fr;
-  gap:18px;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
 }
-@media(min-width:900px){
-  .cards{grid-template-columns:repeat(3,1fr);}
+
+/* 모바일 글자 축소 */
+@media(max-width:520px){
+  .card{ padding:14px; border-radius:14px; }
+  .title{ font-size:14px; }
+  .sub{ font-size:11px; }
+  .price{ font-size:16px; margin-top:10px; }
+  .perg{ font-size:12px; }
+  .delta{ font-size:12px; }
 }
 
 .card{
-  border:1px solid #eaeaea;
+  background:#171a21;
+  border:1px solid #262b36;
   border-radius:18px;
   padding:22px;
   transition:0.2s;
 }
-.card:hover{box-shadow:0 10px 25px rgba(0,0,0,0.06);}
 
-.title{font-size:17px;font-weight:900;}
-.sub{font-size:12px;color:#666;margin-top:4px;}
+.card:hover{
+  border-color:#3b82f6;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+.title{
+  font-size:17px;
+  font-weight:900;
+  color:#fff;
+}
+
+.sub{
+  font-size:12px;
+  color:#9ca3af;
+  margin-top:4px;
+}
 
 .price{
   font-size:22px;
   font-weight:900;
   margin-top:14px;
   letter-spacing:-0.3px;
+  color:#fff;
 }
 
 .perg{
   margin-top:8px;
   font-size:14px;
-  color:#374151;
+  color:#d1d5db;
   font-weight:800;
 }
+
 .perg span{
-  color:#6b7280;
-  font-weight:800;
+  color:#9ca3af;
 }
 
 .delta{
@@ -62,13 +94,14 @@ h1{font-size:22px;font-weight:900;margin-bottom:6px;}
   font-weight:900;
   font-size:14px;
 }
-.up{color:#d32f2f;}
-.down{color:#1565c0;}
+
+.up{color:#ff5252;}
+.down{color:#4dabf7;}
 
 .note{
   margin-top:22px;
   font-size:12px;
-  color:#555;
+  color:#9ca3af;
   line-height:1.6;
 }
 </style>
