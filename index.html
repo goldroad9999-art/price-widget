@@ -13,40 +13,37 @@ body{
   color:#f5f5f5;
 }
 
-.wrap{max-width:1100px;margin:auto;padding:20px;}
+.wrap{
+  max-width:720px;   /* 🔥 세로형에 맞게 폭 축소 */
+  margin:auto;
+  padding:20px;
+}
 
 h1{
   font-size:22px;
-  font-weight:900;
-  margin-bottom:6px;
+  font-weight:600;
+  margin-bottom:8px;
   color:#ffffff;
 }
 
 .meta{
   font-size:12px;
   color:#a1a1aa;
-  margin-bottom:20px;
+  margin-bottom:22px;
   line-height:1.6;
 }
 
 .cards{
   display:grid;
-  grid-template-columns:repeat(3,1fr); /* 모바일도 3칸 */
-  gap:10px;
+  grid-template-columns:1fr; /* ✅ 세로 1열 */
+  gap:20px;
 }
-
-/* 너무 작은 폰에서는 2칸이 더 보기 좋으면 주석 해제 */
-/*
-@media(max-width:360px){
-  .cards{grid-template-columns:repeat(2,1fr);}
-}
-*/
 
 .card{
   background:#171a21;
   border:1px solid #262b36;
   border-radius:18px;
-  padding:22px;
+  padding:24px;
   transition:0.2s;
 }
 
@@ -56,8 +53,8 @@ h1{
 }
 
 .title{
-  font-size:17px;
-  font-weight:900;
+  font-size:18px;
+  font-weight:700;
   color:#fff;
 }
 
@@ -68,44 +65,45 @@ h1{
 }
 
 .price{
-  font-size:22px;
-  font-weight:900;
-  margin-top:14px;
+  font-size:26px;
+  font-weight:700;
+  margin-top:18px;
   letter-spacing:-0.3px;
   color:#fff;
 }
 
 .perg{
-  margin-top:8px;
+  margin-top:10px;
   font-size:14px;
   color:#d1d5db;
-  font-weight:800;
+  font-weight:500;
 }
-.perg span{ color:#9ca3af; }
+
+.perg span{
+  color:#9ca3af;
+}
 
 .delta{
-  margin-top:10px;
-  font-weight:900;
+  margin-top:12px;
+  font-weight:600;
   font-size:14px;
 }
+
 .up{color:#ff5252;}
 .down{color:#4dabf7;}
 
 .note{
-  margin-top:22px;
+  margin-top:28px;
   font-size:12px;
   color:#9ca3af;
   line-height:1.6;
 }
 
-/* 모바일 글자 축소 */
-@media(max-width:520px){
-  .card{ padding:14px; border-radius:14px; }
-  .title{ font-size:14px; }
-  .sub{ font-size:11px; }
-  .price{ font-size:16px; margin-top:10px; }
-  .perg{ font-size:12px; }
-  .delta{ font-size:12px; }
+/* 모바일 미세 조정 */
+@media(max-width:480px){
+  .wrap{padding:16px;}
+  .card{padding:18px;}
+  .price{font-size:22px;}
 }
 </style>
 </head>
@@ -143,18 +141,18 @@ const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
 
 async function fetchFx(){
-  const r = await fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" });
+  const r = await fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"});
   const j = await r.json();
   return j.rates.KRW;
 }
+
 async function fetchMetal(symbol){
-  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`, { cache: "no-store" });
+  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`,{cache:"no-store"});
   return r.json();
 }
 
 function cardHtml(title, perDonPrice, changePct){
   const perG = perDonPrice / DON;
-
   const up = changePct >= 0;
   const cls = up ? "up" : "down";
   const arrow = up ? "▲" : "▼";
