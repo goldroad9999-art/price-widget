@@ -13,45 +13,30 @@ body{
   color:#f5f5f5;
 }
 
-.wrap{ max-width:720px; margin:auto; padding:20px; }
+.wrap{
+  max-width:720px;
+  margin:auto;
+  padding:20px;
+}
 
-h1{ font-size:18px; font-weight:550; margin:0 0 8px; }
+h1{
+  font-size:18px;
+  font-weight:550;
+  margin-bottom:8px;
+}
 
 .meta{
   font-size:12px;
   color:#a1a1aa;
-  margin-bottom:16px;
+  margin-bottom:22px;
   line-height:1.6;
 }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-  margin-bottom:10px;
+.cards{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:20px;
 }
-
-.btn{
-  background:#171a21;
-  border:1px solid #262b36;
-  color:#e5e7eb;
-  border-radius:12px;
-  padding:10px 12px;
-  font-size:12px;
-  font-weight:600;
-  cursor:pointer;
-}
-.btn:hover{ border-color:#3b82f6; }
-.btn:disabled{ opacity:0.6; cursor:not-allowed; }
-
-.loading{
-  text-align:center;
-  padding:36px 0;
-  color:#9ca3af;
-}
-
-.cards{ display:grid; grid-template-columns:1fr; gap:20px; }
 
 .card{
   background:#171a21;
@@ -60,90 +45,112 @@ h1{ font-size:18px; font-weight:550; margin:0 0 8px; }
   padding:24px;
 }
 
-.title{ font-size:17px; font-weight:600; }
+.title{
+  font-size:17px;
+  font-weight:600;
+}
 
-.sub{ font-size:12px; color:#9ca3af; margin-top:4px; }
+.sub{
+  font-size:12px;
+  color:#9ca3af;
+  margin-top:4px;
+}
 
-.price{ font-size:24px; font-weight:600; margin-top:18px; letter-spacing:-0.3px; }
+.price{
+  font-size:24px;
+  font-weight:600;
+  margin-top:18px;
+}
 
-.perg{ margin-top:10px; font-size:14px; color:#d1d5db; font-weight:400; }
+.perg{
+  margin-top:10px;
+  font-size:14px;
+  color:#d1d5db;
+}
+
 .perg span{ color:#9ca3af; }
 
-.delta{ margin-top:12px; font-weight:600; font-size:14px; }
-.up{ color:#ff5252; }
-.down{ color:#4dabf7; }
-
-.deltaSub{
-  margin-top:6px;
-  font-size:12px;
-  color:#9ca3af;
+.delta{
+  margin-top:12px;
+  font-weight:600;
+  font-size:14px;
 }
+
+.up{color:#ff5252;}
+.down{color:#4dabf7;}
 
 .note{
-  margin-top:22px;
+  margin-top:28px;
   font-size:12px;
   color:#9ca3af;
-  line-height:1.6;
 }
 
-@media(max-width:480px){
-  .wrap{ padding:16px; }
-  .card{ padding:18px; }
-  .price{ font-size:22px; }
+.loading{
+  text-align:center;
+  padding:40px;
+  color:#9ca3af;
 }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-  <div class="topbar">
-    <div>
-      <h1>오늘의 시세 (VAT 별도)</h1>
-      <div class="meta">
-        <div id="date">기준일: -</div>
-        <div id="fx">USD/KRW: -</div>
-        <div id="update">업데이트: -</div>
-      </div>
-    </div>
 
-    <button class="btn" id="refreshBtn" type="button">새로고침</button>
-  </div>
+<h1>오늘의 시세 (VAT 별도)</h1>
 
-  <div id="loading" class="loading">시세 불러오는 중...</div>
-  <div class="cards" id="cards"></div>
+<div class="meta">
+  <div id="date">기준일: -</div>
+  <div id="fx">USD/KRW: -</div>
+  <div id="update">업데이트: -</div>
+</div>
 
-  <div class="note">
-    ※ 국제 시세(USD/oz) 및 환율을 기반으로 산출한 기준가 입니다.<br>
-    ※ 실제 판매/매입가는 업체 정책·수량·가공비 등에 따라 달라질 수 있습니다.<br>
-    ※ 전일대비 “원 변동”은 <b>오늘 환율 기준</b>으로 환산한 참고값입니다.
-  </div>
+<div id="loading" class="loading">시세 불러오는 중...</div>
+<div class="cards" id="cards"></div>
+
+<div class="note">
+※ 국제 시세(USD/oz) + 환율 기반 자동 산출<br>
+※ 실제 판매가는 업체 정책에 따라 달라질 수 있습니다.
+</div>
+
 </div>
 
 <script>
 const OZ_TO_G = 31.1034768;
 const DON = 3.75;
 
-// 삼성 기준 맞춤 보정계수(그대로 유지)
+// 삼성 보정
 const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
-const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
+const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
 
-async function fetchAll(){
-  const r = await fetch("/.netlify/functions/metals", { cache: "no-store" });
-  if (!r.ok) throw new Error("metals function failed");
+/* ---------------- 환율 캐시 (속도 핵심) ---------------- */
+let FX_CACHE={value:null,ts:0};
+async function fetchFx(){
+  const now=Date.now();
+  if(FX_CACHE.value && now-FX_CACHE.ts<10*60*1000){
+    return FX_CACHE.value;
+  }
+  const r=await fetch("https://open.er-api.com/v6/latest/USD");
+  const j=await r.json();
+  FX_CACHE={value:j.rates.KRW,ts:now};
+  return FX_CACHE.value;
+}
+
+/* ---------------- 금속 데이터 ---------------- */
+async function fetchMetal(symbol){
+  const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
   return r.json();
 }
 
-function cardHtml(title, perDonPrice, changePct, changeWonPerDon){
-  const perG = perDonPrice / DON;
-
-  const up = changePct >= 0;
-  const cls = up ? "up" : "down";
-  const arrow = up ? "▲" : "▼";
-  const changeWonAbs = Math.abs(changeWonPerDon || 0);
+/* ---------------- 카드 HTML ---------------- */
+function cardHtml(title,perDonPrice,changePct){
+  const perG=perDonPrice/DON;
+  const up=changePct>=0;
+  const arrow=up?"▲":"▼";
+  const cls=up?"up":"down";
 
   return `
   <div class="card">
@@ -154,61 +161,51 @@ function cardHtml(title, perDonPrice, changePct, changeWonPerDon){
 
     <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
 
-    <div class="delta ${cls}">${arrow} ${Math.abs(changePct).toFixed(2)}%</div>
-    <div class="deltaSub">전일 대비(원): ${up ? "+" : "-"}${fmt(changeWonAbs).replace("원","")}원</div>
+    <div class="delta ${cls}">
+      ${arrow} ${Math.abs(changePct).toFixed(2)}%
+    </div>
   </div>`;
 }
 
-function setLoading(on, msg){
-  const loading = document.getElementById("loading");
-  loading.style.display = on ? "block" : "none";
-  if (msg) loading.textContent = msg;
-}
-
+/* ---------------- 렌더 ---------------- */
 async function render(){
-  const btn = document.getElementById("refreshBtn");
-  btn.disabled = true;
-
-  setLoading(true, "시세 불러오는 중...");
-  document.getElementById("cards").innerHTML = "";
-
   try{
-    const data = await fetchAll();
-    if (!data?.success) throw new Error(data?.error || "unknown error");
 
-    const fx = data.usdkrw;
-    const gold = data.metals.xauusd;
-    const silver = data.metals.xagusd;
-    const plat = data.metals.xptusd;
+    // ⭐ 동시 요청 (속도 핵심)
+    const [fx,gold,silver,plat]=await Promise.all([
+      fetchFx(),
+      fetchMetal("xauusd"),
+      fetchMetal("xagusd"),
+      fetchMetal("xptusd")
+    ]);
 
-    document.getElementById("date").textContent = "기준일: " + gold.date;
-    document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
-    document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
+    document.getElementById("loading").style.display="none";
 
-    // USD/oz → KRW/돈 → 삼성 보정
-    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
-    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
-    const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
+    document.getElementById("date").textContent="기준일: "+gold.date;
+    document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
+    document.getElementById("update").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
 
-    // 전일대비 원 변동(오늘 환율 기준)
-    const goldChangeWonPerDon = (gold.krw_change / OZ_TO_G * DON) * ADJUST_GOLD;
-    const silverChangeWonPerDon = (silver.krw_change / OZ_TO_G * DON) * ADJUST_SILVER;
-    const platChangeWonPerDon = (plat.krw_change / OZ_TO_G * DON) * ADJUST_PLAT;
+    const goldPerDon=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
+    const silverPerDon=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
+    const platPerDon=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
 
-    document.getElementById("cards").innerHTML =
-      cardHtml("순금 시세", goldPerDon, gold.change_pct, goldChangeWonPerDon) +
-      cardHtml("백금 시세", platPerDon, plat.change_pct, platChangeWonPerDon) +
-      cardHtml("은 시세", silverPerDon, silver.change_pct, silverChangeWonPerDon);
+    document.getElementById("cards").innerHTML=
+      cardHtml("순금 시세",goldPerDon,gold.change_pct)+
+      cardHtml("백금 시세",platPerDon,plat.change_pct)+
+      cardHtml("은 시세",silverPerDon,silver.change_pct);
 
-    setLoading(false);
-  } catch(e){
+  }catch(e){
+    document.getElementById("loading").textContent="시세 불러오기 실패";
     console.error(e);
-    setLoading(true, "시세 불러오기 실패 (잠시 후 새로고침)");
-  } finally {
-    btn.disabled = false;
   }
 }
 
+render();
+setInterval(render,600000);
+</script>
+
+</body>
+</html>
 // ✅ 로드시만
 render();
 
