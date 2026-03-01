@@ -199,18 +199,3 @@ async function render(){
     console.error(e);
   }
 }
-
-render();
-setInterval(render,600000);
-</script>
-
-</body>
-</html>
-// ✅ 로드시만
-render();
-
-// ✅ 수동 새로고침 버튼
-document.getElementById("refreshBtn").addEventListener("click", () => render());
-</script>
-</body>
-</html>
