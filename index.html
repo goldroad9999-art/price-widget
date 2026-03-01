@@ -14,7 +14,7 @@ body{
 }
 
 .wrap{
-  max-width:720px;   /* 🔥 세로형에 맞게 폭 축소 */
+  max-width:720px;
   margin:auto;
   padding:20px;
 }
@@ -23,7 +23,6 @@ h1{
   font-size:18px;
   font-weight:550;
   margin-bottom:8px;
-  color:#ffffff;
 }
 
 .meta{
@@ -35,7 +34,7 @@ h1{
 
 .cards{
   display:grid;
-  grid-template-columns:1fr; /* ✅ 세로 1열 */
+  grid-template-columns:1fr;
   gap:20px;
 }
 
@@ -44,18 +43,11 @@ h1{
   border:1px solid #262b36;
   border-radius:18px;
   padding:24px;
-  transition:0.2s;
-}
-
-.card:hover{
-  border-color:#3b82f6;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
 .title{
   font-size:17px;
   font-weight:600;
-  color:#fff;
 }
 
 .sub{
@@ -68,20 +60,15 @@ h1{
   font-size:24px;
   font-weight:600;
   margin-top:18px;
-  letter-spacing:-0.3px;
-  color:#fff;
 }
 
 .perg{
   margin-top:10px;
   font-size:14px;
   color:#d1d5db;
-  font-weight:400;
 }
 
-.perg span{
-  color:#9ca3af;
-}
+.perg span{ color:#9ca3af; }
 
 .delta{
   margin-top:12px;
@@ -96,14 +83,12 @@ h1{
   margin-top:28px;
   font-size:12px;
   color:#9ca3af;
-  line-height:1.6;
 }
 
-/* 모바일 미세 조정 */
-@media(max-width:480px){
-  .wrap{padding:16px;}
-  .card{padding:18px;}
-  .price{font-size:22px;}
+.loading{
+  text-align:center;
+  padding:40px;
+  color:#9ca3af;
 }
 </style>
 </head>
@@ -119,11 +104,12 @@ h1{
   <div id="update">업데이트: -</div>
 </div>
 
+<div id="loading" class="loading">시세 불러오는 중...</div>
 <div class="cards" id="cards"></div>
 
 <div class="note">
-※ 본 시세는 국제 시세(USD/oz) 및 환율을 기반으로 산출한 기준가 입니다.<br>
-※ 실제 판매/매입가는 업체 정책·수량·가공비 등에 따라 달라질 수 있습니다.
+※ 국제 시세(USD/oz) + 환율 기반 자동 산출<br>
+※ 실제 판매가는 업체 정책에 따라 달라질 수 있습니다.
 </div>
 
 </div>
@@ -132,30 +118,39 @@ h1{
 const OZ_TO_G = 31.1034768;
 const DON = 3.75;
 
-// 삼성 기준 맞춤 보정계수
+// 삼성 보정
 const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
-const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
+const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
 
+/* ---------------- 환율 캐시 (속도 핵심) ---------------- */
+let FX_CACHE={value:null,ts:0};
 async function fetchFx(){
-  const r = await fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"});
-  const j = await r.json();
-  return j.rates.KRW;
+  const now=Date.now();
+  if(FX_CACHE.value && now-FX_CACHE.ts<10*60*1000){
+    return FX_CACHE.value;
+  }
+  const r=await fetch("https://open.er-api.com/v6/latest/USD");
+  const j=await r.json();
+  FX_CACHE={value:j.rates.KRW,ts:now};
+  return FX_CACHE.value;
 }
 
+/* ---------------- 금속 데이터 ---------------- */
 async function fetchMetal(symbol){
-  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`,{cache:"no-store"});
+  const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
   return r.json();
 }
 
-function cardHtml(title, perDonPrice, changePct){
-  const perG = perDonPrice / DON;
-  const up = changePct >= 0;
-  const cls = up ? "up" : "down";
-  const arrow = up ? "▲" : "▼";
+/* ---------------- 카드 HTML ---------------- */
+function cardHtml(title,perDonPrice,changePct){
+  const perG=perDonPrice/DON;
+  const up=changePct>=0;
+  const arrow=up?"▲":"▼";
+  const cls=up?"up":"down";
 
   return `
   <div class="card">
@@ -166,32 +161,47 @@ function cardHtml(title, perDonPrice, changePct){
 
     <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
 
-    <div class="delta ${cls}">${arrow} ${Math.abs(changePct).toFixed(2)}%</div>
+    <div class="delta ${cls}">
+      ${arrow} ${Math.abs(changePct).toFixed(2)}%
+    </div>
   </div>`;
 }
 
+/* ---------------- 렌더 ---------------- */
 async function render(){
-  const fx = await fetchFx();
-  const gold = await fetchMetal("xauusd");
-  const silver = await fetchMetal("xagusd");
-  const plat = await fetchMetal("xptusd");
+  try{
 
-  document.getElementById("date").textContent = "기준일: " + gold.date;
-  document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
-  document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
+    // ⭐ 동시 요청 (속도 핵심)
+    const [fx,gold,silver,plat]=await Promise.all([
+      fetchFx(),
+      fetchMetal("xauusd"),
+      fetchMetal("xagusd"),
+      fetchMetal("xptusd")
+    ]);
 
-  const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
-  const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
-  const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
+    document.getElementById("loading").style.display="none";
 
-  document.getElementById("cards").innerHTML =
-    cardHtml("순금 시세", goldPerDon, gold.change_pct) +
-    cardHtml("백금 시세", platPerDon, plat.change_pct) +
-    cardHtml("은 시세", silverPerDon, silver.change_pct);
+    document.getElementById("date").textContent="기준일: "+gold.date;
+    document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
+    document.getElementById("update").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
+
+    const goldPerDon=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
+    const silverPerDon=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
+    const platPerDon=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
+
+    document.getElementById("cards").innerHTML=
+      cardHtml("순금 시세",goldPerDon,gold.change_pct)+
+      cardHtml("백금 시세",platPerDon,plat.change_pct)+
+      cardHtml("은 시세",silverPerDon,silver.change_pct);
+
+  }catch(e){
+    document.getElementById("loading").textContent="시세 불러오기 실패";
+    console.error(e);
+  }
 }
 
 render();
-setInterval(render, 600000);
+setInterval(render,600000);
 </script>
 
 </body>
