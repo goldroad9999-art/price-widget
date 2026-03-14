@@ -60,15 +60,20 @@ h1{
   font-size:24px;
   font-weight:600;
   margin-top:18px;
+  line-height:1.3;
+  word-break:keep-all;
 }
 
 .perg{
   margin-top:10px;
   font-size:14px;
   color:#d1d5db;
+  line-height:1.4;
 }
 
-.perg span{ color:#9ca3af; }
+.perg span{
+  color:#9ca3af;
+}
 
 .delta{
   margin-top:12px;
@@ -83,12 +88,112 @@ h1{
   margin-top:28px;
   font-size:12px;
   color:#9ca3af;
+  line-height:1.6;
 }
 
 .loading{
   text-align:center;
   padding:40px;
   color:#9ca3af;
+}
+
+/* compact 모드 */
+body.compact .wrap{
+  max-width:none;
+  padding:10px;
+}
+
+body.compact h1{
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+body.compact .meta{
+  font-size:10px;
+  margin-bottom:10px;
+  line-height:1.4;
+}
+
+body.compact .cards{
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+}
+
+body.compact .card{
+  border-radius:14px;
+  padding:12px 10px;
+}
+
+body.compact .title{
+  font-size:13px;
+  font-weight:700;
+}
+
+body.compact .sub{
+  font-size:10px;
+  margin-top:3px;
+}
+
+body.compact .price{
+  font-size:16px;
+  margin-top:10px;
+}
+
+body.compact .perg{
+  margin-top:8px;
+  font-size:11px;
+}
+
+body.compact .delta{
+  margin-top:8px;
+  font-size:11px;
+}
+
+body.compact .note{
+  margin-top:12px;
+  font-size:10px;
+  line-height:1.5;
+}
+
+body.compact .loading{
+  padding:20px;
+  font-size:12px;
+}
+
+@media (max-width: 480px){
+  body.compact .wrap{
+    padding:8px;
+  }
+
+  body.compact .cards{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:6px;
+  }
+
+  body.compact .card{
+    padding:10px 8px;
+    border-radius:12px;
+  }
+
+  body.compact .title{
+    font-size:12px;
+  }
+
+  body.compact .sub{
+    font-size:9px;
+  }
+
+  body.compact .price{
+    font-size:14px;
+  }
+
+  body.compact .perg{
+    font-size:10px;
+  }
+
+  body.compact .delta{
+    font-size:10px;
+  }
 }
 </style>
 </head>
@@ -118,7 +223,6 @@ h1{
 const OZ_TO_G = 31.1034768;
 const DON = 3.75;
 
-// 삼성 보정
 const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
@@ -126,82 +230,73 @@ const ADJUST_PLAT = 1.07371;
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
 
-/* ---------------- 환율 캐시 (속도 핵심) ---------------- */
-let FX_CACHE={value:null,ts:0};
-async function fetchFx(){
-  const now=Date.now();
-  if(FX_CACHE.value && now-FX_CACHE.ts<10*60*1000){
-    return FX_CACHE.value;
-  }
-  const r=await fetch("https://open.er-api.com/v6/latest/USD");
-  const j=await r.json();
-  FX_CACHE={value:j.rates.KRW,ts:now};
-  return FX_CACHE.value;
+const params = new URLSearchParams(window.location.search);
+const isCompact = params.get("mode") === "compact";
+
+if (isCompact) {
+  document.body.classList.add("compact");
 }
 
-/* ---------------- 금속 데이터 ---------------- */
+async function fetchFx(){
+  const r = await fetch("https://open.er-api.com/v6/latest/USD");
+  const j = await r.json();
+  return j.rates.KRW;
+}
+
 async function fetchMetal(symbol){
-  const r=await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
+  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
   return r.json();
 }
 
-/* ---------------- 카드 HTML ---------------- */
-function cardHtml(title,perDonPrice,changePct){
-  const perG=perDonPrice/DON;
-  const up=changePct>=0;
-  const arrow=up?"▲":"▼";
-  const cls=up?"up":"down";
+function cardHtml(title, perDonPrice, changePct){
+  const perG = perDonPrice / DON;
+  const up = changePct >= 0;
+  const arrow = up ? "▲" : "▼";
+  const cls = up ? "up" : "down";
 
   return `
   <div class="card">
     <div class="title">${title}</div>
     <div class="sub">1돈(3.75g) 기준</div>
-
     <div class="price">${fmt(perDonPrice)}</div>
-
     <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
-
     <div class="delta ${cls}">
       ${arrow} ${Math.abs(changePct).toFixed(2)}%
     </div>
   </div>`;
 }
 
-/* ---------------- 렌더 ---------------- */
 async function render(){
   try{
-
-    // ⭐ 동시 요청 (속도 핵심)
-    const [fx,gold,silver,plat]=await Promise.all([
+    const [fx, gold, silver, plat] = await Promise.all([
       fetchFx(),
       fetchMetal("xauusd"),
       fetchMetal("xagusd"),
       fetchMetal("xptusd")
     ]);
 
-    document.getElementById("loading").style.display="none";
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("date").textContent = "기준일: " + gold.date;
+    document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
+    document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-    document.getElementById("date").textContent="기준일: "+gold.date;
-    document.getElementById("fx").textContent="USD/KRW: "+fmtFx(fx);
-    document.getElementById("update").textContent="업데이트: "+new Date().toLocaleString("ko-KR");
+    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
+    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
+    const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
 
-    const goldPerDon=(gold.close*fx)/OZ_TO_G*DON*ADJUST_GOLD;
-    const silverPerDon=(silver.close*fx)/OZ_TO_G*DON*ADJUST_SILVER;
-    const platPerDon=(plat.close*fx)/OZ_TO_G*DON*ADJUST_PLAT;
+    document.getElementById("cards").innerHTML =
+      cardHtml("순금 시세", goldPerDon, gold.change_pct) +
+      cardHtml("백금 시세", platPerDon, plat.change_pct) +
+      cardHtml("은 시세", silverPerDon, silver.change_pct);
 
-    document.getElementById("cards").innerHTML=
-      cardHtml("순금 시세",goldPerDon,gold.change_pct)+
-      cardHtml("백금 시세",platPerDon,plat.change_pct)+
-      cardHtml("은 시세",silverPerDon,silver.change_pct);
-
-  }catch(e){
-    document.getElementById("loading").textContent="시세 불러오기 실패";
+  } catch(e){
+    document.getElementById("loading").textContent = "시세 불러오기 실패";
     console.error(e);
   }
 }
 
 render();
-setInterval(render,3600000);
+setInterval(render, 3600000);
 </script>
 
 </body>
