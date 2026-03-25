@@ -209,22 +209,23 @@ body.compact .loading{
 <body>
 <div class="wrap">
 
-<h1> 오늘의 매입 시세</h1>
+<h1>오늘의 매입 시세</h1>
 
 <div class="meta">
-  <div id="date"> 기준일: -</div>
-  <div id="fx"> USD/KRW: -</div>
-  <div id="update"> 업데이트: -</div>
+  <div id="date">기준일: -</div>
+  <div id="fx">USD/KRW: -</div>
+  <div id="update">업데이트: -</div>
 </div>
 
 <div id="loading" class="loading">시세 불러오는 중...</div>
 
-<h2> [ 매입 시세 ]</h2>
+<h2>[ 매입 시세 ]</h2>
 <div class="cards" id="buyCards"></div>
 
 <div class="note">
 ※ 표시된 매입가는 참고용 예상 단가입니다.<br>
 ※ 순금은 금덩어리 기준, 18K/14K는 제품 기준으로 산출됩니다.<br>
+※ 최종 매입 금액은 실물 수령 후 중량, 순도, 부속물 여부 확인 뒤 확정됩니다.
 </div>
 
 </div>
@@ -241,7 +242,7 @@ const BUY_PURITY_18K = 0.743;
 const BUY_PURITY_14K = 0.574;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
-const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
+const fmtFx = n => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(n);
 
 const params = new URLSearchParams(window.location.search);
 const isCompact = params.get("mode") === "compact";
@@ -252,13 +253,18 @@ if (isCompact) {
 
 async function fetchFx(){
   const r = await fetch("https://open.er-api.com/v6/latest/USD");
+  if (!r.ok) throw new Error("환율 데이터를 불러오지 못했습니다.");
   const j = await r.json();
+  if (!j?.rates?.KRW) throw new Error("KRW 환율 데이터가 없습니다.");
   return j.rates.KRW;
 }
 
 async function fetchMetal(symbol){
   const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
-  return r.json();
+  if (!r.ok) throw new Error("금속 시세 데이터를 불러오지 못했습니다.");
+  const j = await r.json();
+  if (!j?.close) throw new Error("금 시세 close 값이 없습니다.");
+  return j;
 }
 
 function buyCardHtml(title, perDonPrice){
@@ -271,6 +277,14 @@ function buyCardHtml(title, perDonPrice){
     <div class="price">${fmt(perDonPrice)}</div>
     <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
   </div>`;
+}
+
+function sendPriceMessage(payload){
+  try{
+    window.parent.postMessage(payload, "*");
+  } catch (err){
+    console.error("부모 페이지로 postMessage 전송 실패:", err);
+  }
 }
 
 async function render(){
@@ -288,19 +302,42 @@ async function render(){
     // 원시 금 시세(보정 전)
     const goldRawPerDon = (gold.close * fx) / OZ_TO_G * DON;
 
-    // 매입 시세
+    // 매입 시세 (1돈 기준)
     const goldBuyPerDon = goldRawPerDon * BUY_PURITY_24K * BUY_RATIO_GOLD_24K;
     const gold18kBuyPerDon = goldRawPerDon * BUY_PURITY_18K * BUY_RATIO_GOLD_24K;
     const gold14kBuyPerDon = goldRawPerDon * BUY_PURITY_14K * BUY_RATIO_GOLD_24K;
+
+    // 1g 기준가
+    const price24k = Math.round(goldBuyPerDon / DON);
+    const price18k = Math.round(gold18kBuyPerDon / DON);
+    const price14k = Math.round(gold14kBuyPerDon / DON);
 
     document.getElementById("buyCards").innerHTML =
       buyCardHtml("순금 매입시세", goldBuyPerDon) +
       buyCardHtml("18K 매입시세", gold18kBuyPerDon) +
       buyCardHtml("14K 매입시세", gold14kBuyPerDon);
 
+    // 부모 페이지(식스샵 계산기)로 시세 전달
+    sendPriceMessage({
+      type: "GOLD_PRICE_UPDATE",
+      data: {
+        "24k": price24k,
+        "18k": price18k,
+        "14k": price14k,
+        date: gold.date,
+        fx: fx,
+        updatedAt: new Date().toLocaleString("ko-KR")
+      }
+    });
+
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
     console.error(e);
+
+    sendPriceMessage({
+      type: "GOLD_PRICE_ERROR",
+      message: "시세 불러오기 실패"
+    });
   }
 }
 
