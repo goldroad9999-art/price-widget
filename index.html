@@ -261,7 +261,8 @@ body.compact .buy-badge{
 <div class="cards" id="buyCards"></div>
 
 <div class="note">
-※ 표시된 순금 매입가는 참고용 예상 단가입니다.<br>
+※ 표시된 매입가는 참고용 예상 단가입니다.<br>
+※ 18K는 74.3%, 14K는 57.4% 기준으로 산출됩니다.<br>
 ※ 최종 매입 금액은 실물 수령 후 중량, 순도, 부속물 여부 확인 뒤 확정됩니다.
 </div>
 
@@ -276,6 +277,11 @@ const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
 
 const BUY_RATIO_GOLD_24K = 0.98;
+
+// 회사 기준 순도값
+const BUY_PURITY_24K = 1.0;
+const BUY_PURITY_18K = 0.743;
+const BUY_PURITY_14K = 0.574;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
@@ -357,11 +363,15 @@ async function render(){
       cardHtml("백금 시세", platPerDon, plat.change_pct) +
       cardHtml("은 시세", silverPerDon, silver.change_pct);
 
-    // 매입 시세(보정값 적용 전 기준가의 98%)
-    const goldBuyPerDon = goldRawPerDon * BUY_RATIO_GOLD_24K;
+    // 매입 시세(보정값 적용 전 기준가 × 회사 기준 순도 × 98%)
+    const goldBuyPerDon = goldRawPerDon * BUY_PURITY_24K * BUY_RATIO_GOLD_24K;
+    const gold18kBuyPerDon = goldRawPerDon * BUY_PURITY_18K * BUY_RATIO_GOLD_24K;
+    const gold14kBuyPerDon = goldRawPerDon * BUY_PURITY_14K * BUY_RATIO_GOLD_24K;
 
     document.getElementById("buyCards").innerHTML =
-      buyCardHtml("순금 매입시세", goldBuyPerDon);
+      buyCardHtml("순금 매입시세", goldBuyPerDon) +
+      buyCardHtml("18K 매입시세", gold18kBuyPerDon) +
+      buyCardHtml("14K 매입시세", gold14kBuyPerDon);
 
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
