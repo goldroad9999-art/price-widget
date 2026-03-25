@@ -14,7 +14,7 @@ body{
 }
 
 .wrap{
-  max-width:920px;
+  max-width:720px;
   margin:auto;
   padding:20px;
 }
@@ -245,13 +245,17 @@ body.compact .buy-badge{
 
 <div id="loading" class="loading">시세 불러오는 중...</div>
 
+<h2>판매 시세</h2>
 <div class="cards" id="cards"></div>
-
-<h2>순금 매입가</h2>
-<div class="cards" id="buyCards"></div>
 
 <div class="note">
 ※ 국제 시세(USD/oz) + 환율 기반 자동 산출<br>
+※ 본 시세는 국제 시세 및 환율을 기준으로 산출한 참고가격이며 실제 판매 상품의 가격과는 다를 수 있습니다.
+  
+<h2>매입 시세</h2>
+<div class="cards" id="buyCards"></div>
+
+<div class="note">
 ※ 표시된 순금 매입가는 참고용 예상 단가입니다.<br>
 ※ 최종 매입 금액은 실물 수령 후 중량, 순도, 부속물 여부 확인 뒤 확정됩니다.
 </div>
@@ -347,7 +351,7 @@ async function render(){
     const goldBuyPerDon = goldPerDon * BUY_RATIO_GOLD_24K;
 
     document.getElementById("buyCards").innerHTML =
-      buyCardHtml("순금 매입가", goldBuyPerDon);
+      buyCardHtml("순금 매입시세", goldBuyPerDon);
 
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
