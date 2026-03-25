@@ -251,6 +251,8 @@ if (isCompact) {
   document.body.classList.add("compact");
 }
 
+let latestGoldPricePayload = null;
+
 async function fetchFx(){
   const r = await fetch("https://open.er-api.com/v6/latest/USD");
   if (!r.ok) throw new Error("환율 데이터를 불러오지 못했습니다.");
@@ -299,15 +301,12 @@ async function render(){
     document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
     document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-    // 원시 금 시세(보정 전)
     const goldRawPerDon = (gold.close * fx) / OZ_TO_G * DON;
 
-    // 매입 시세 (1돈 기준)
     const goldBuyPerDon = goldRawPerDon * BUY_PURITY_24K * BUY_RATIO_GOLD_24K;
     const gold18kBuyPerDon = goldRawPerDon * BUY_PURITY_18K * BUY_RATIO_GOLD_24K;
     const gold14kBuyPerDon = goldRawPerDon * BUY_PURITY_14K * BUY_RATIO_GOLD_24K;
 
-    // 1g 기준가
     const price24k = Math.round(goldBuyPerDon / DON);
     const price18k = Math.round(gold18kBuyPerDon / DON);
     const price14k = Math.round(gold14kBuyPerDon / DON);
@@ -317,8 +316,7 @@ async function render(){
       buyCardHtml("18K 매입시세", gold18kBuyPerDon) +
       buyCardHtml("14K 매입시세", gold14kBuyPerDon);
 
-    // 부모 페이지(식스샵 계산기)로 시세 전달
-    sendPriceMessage({
+    latestGoldPricePayload = {
       type: "GOLD_PRICE_UPDATE",
       data: {
         "24k": price24k,
@@ -328,7 +326,9 @@ async function render(){
         fx: fx,
         updatedAt: new Date().toLocaleString("ko-KR")
       }
-    });
+    };
+
+    sendPriceMessage(latestGoldPricePayload);
 
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
@@ -340,6 +340,15 @@ async function render(){
     });
   }
 }
+
+window.addEventListener('message', function(event) {
+  var payload = event.data;
+  if (!payload || typeof payload !== 'object') return;
+
+  if (payload.type === 'REQUEST_GOLD_PRICE' && latestGoldPricePayload) {
+    sendPriceMessage(latestGoldPricePayload);
+  }
+});
 
 render();
 setInterval(render, 3600000);
