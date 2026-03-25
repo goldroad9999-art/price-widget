@@ -103,10 +103,14 @@ h2{
   color:#9ca3af;
 }
 
-/* 매입가 카드 강조 */
 .buy-card{
   border:1px solid #3a4458;
   box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+
+.buy-card .title,
+.buy-card .price{
+  color:#f5f5f5;
 }
 
 .buy-badge{
@@ -251,7 +255,8 @@ body.compact .buy-badge{
 <div class="note">
 ※ 국제 시세(USD/oz) + 환율 기반 자동 산출<br>
 ※ 본 시세는 국제 시세 및 환율을 기준으로 산출한 참고가격이며 실제 판매 상품의 가격과는 다를 수 있습니다.
-  
+</div>
+
 <h2>매입 시세</h2>
 <div class="cards" id="buyCards"></div>
 
@@ -270,7 +275,6 @@ const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
 
-// 순금 매입 반영률만 운영자가 조정
 const BUY_RATIO_GOLD_24K = 0.98;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
@@ -361,9 +365,6 @@ async function render(){
 render();
 setInterval(render, 3600000);
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
