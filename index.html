@@ -14,7 +14,7 @@ body{
 }
 
 .wrap{
-  max-width:720px;
+  max-width:920px;
   margin:auto;
   padding:20px;
 }
@@ -26,7 +26,7 @@ h1{
 }
 
 h2{
-  font-size:16px;
+  font-size:18px;
   font-weight:600;
   margin:28px 0 12px;
 }
@@ -247,7 +247,7 @@ body.compact .buy-badge{
 
 <div class="cards" id="cards"></div>
 
-<h2>현재 순금 매입가</h2>
+<h2>순금 매입가</h2>
 <div class="cards" id="buyCards"></div>
 
 <div class="note">
@@ -313,7 +313,7 @@ function buyCardHtml(title, perDonPrice){
 
   return `
   <div class="card buy-card">
-    <div class="buy-badge">실시간 참고 매입가</div>
+    <div class="buy-badge">실시간 매입가</div>
     <div class="title">${title}</div>
     <div class="sub">1돈(3.75g) 기준</div>
     <div class="price">${fmt(perDonPrice)}</div>
