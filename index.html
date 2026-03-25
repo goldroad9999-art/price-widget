@@ -25,6 +25,12 @@ h1{
   margin-bottom:8px;
 }
 
+h2{
+  font-size:16px;
+  font-weight:600;
+  margin:28px 0 12px;
+}
+
 .meta{
   font-size:12px;
   color:#a1a1aa;
@@ -97,6 +103,23 @@ h1{
   color:#9ca3af;
 }
 
+/* 매입가 카드 강조 */
+.buy-card{
+  border:1px solid #3a4458;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+
+.buy-badge{
+  display:inline-block;
+  font-size:11px;
+  color:#f5f5f5;
+  background:#2b3242;
+  border:1px solid #46506a;
+  padding:4px 8px;
+  border-radius:999px;
+  margin-bottom:10px;
+}
+
 /* compact 모드 */
 body.compact .wrap{
   max-width:none;
@@ -106,6 +129,11 @@ body.compact .wrap{
 body.compact h1{
   font-size:14px;
   margin-bottom:6px;
+}
+
+body.compact h2{
+  font-size:13px;
+  margin:18px 0 8px;
 }
 
 body.compact .meta{
@@ -160,6 +188,12 @@ body.compact .loading{
   font-size:12px;
 }
 
+body.compact .buy-badge{
+  font-size:9px;
+  padding:3px 6px;
+  margin-bottom:8px;
+}
+
 @media (max-width: 480px){
   body.compact .wrap{
     padding:8px;
@@ -210,11 +244,16 @@ body.compact .loading{
 </div>
 
 <div id="loading" class="loading">시세 불러오는 중...</div>
+
 <div class="cards" id="cards"></div>
+
+<h2>현재 순금 매입가</h2>
+<div class="cards" id="buyCards"></div>
 
 <div class="note">
 ※ 국제 시세(USD/oz) + 환율 기반 자동 산출<br>
-※ 본 시세는 국제 시세 및 환율을 기준으로 산출한 참고가격이며 실제 판매 상품의 가격과는 다를 수 있습니다.
+※ 표시된 순금 매입가는 참고용 예상 단가입니다.<br>
+※ 최종 매입 금액은 실물 수령 후 중량, 순도, 부속물 여부 확인 뒤 확정됩니다.
 </div>
 
 </div>
@@ -226,6 +265,9 @@ const DON = 3.75;
 const ADJUST_GOLD = 1.05095;
 const ADJUST_SILVER = 1.40270;
 const ADJUST_PLAT = 1.07371;
+
+// 순금 매입 반영률만 운영자가 조정
+const BUY_RATIO_GOLD_24K = 0.98;
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
@@ -266,6 +308,19 @@ function cardHtml(title, perDonPrice, changePct){
   </div>`;
 }
 
+function buyCardHtml(title, perDonPrice){
+  const perG = perDonPrice / DON;
+
+  return `
+  <div class="card buy-card">
+    <div class="buy-badge">실시간 참고 매입가</div>
+    <div class="title">${title}</div>
+    <div class="sub">1돈(3.75g) 기준</div>
+    <div class="price">${fmt(perDonPrice)}</div>
+    <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
+  </div>`;
+}
+
 async function render(){
   try{
     const [fx, gold, silver, plat] = await Promise.all([
@@ -289,6 +344,11 @@ async function render(){
       cardHtml("백금 시세", platPerDon, plat.change_pct) +
       cardHtml("은 시세", silverPerDon, silver.change_pct);
 
+    const goldBuyPerDon = goldPerDon * BUY_RATIO_GOLD_24K;
+
+    document.getElementById("buyCards").innerHTML =
+      buyCardHtml("순금 매입가", goldBuyPerDon);
+
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
     console.error(e);
@@ -298,6 +358,9 @@ async function render(){
 render();
 setInterval(render, 3600000);
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
