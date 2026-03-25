@@ -342,16 +342,23 @@ async function render(){
     document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
     document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
-    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
-    const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
+    // 원시 시세(보정 전)
+    const goldRawPerDon = (gold.close * fx) / OZ_TO_G * DON;
+    const silverRawPerDon = (silver.close * fx) / OZ_TO_G * DON;
+    const platRawPerDon = (plat.close * fx) / OZ_TO_G * DON;
+
+    // 판매 시세(보정 적용)
+    const goldPerDon = goldRawPerDon * ADJUST_GOLD;
+    const silverPerDon = silverRawPerDon * ADJUST_SILVER;
+    const platPerDon = platRawPerDon * ADJUST_PLAT;
 
     document.getElementById("cards").innerHTML =
       cardHtml("순금 시세", goldPerDon, gold.change_pct) +
       cardHtml("백금 시세", platPerDon, plat.change_pct) +
       cardHtml("은 시세", silverPerDon, silver.change_pct);
 
-    const goldBuyPerDon = goldPerDon * BUY_RATIO_GOLD_24K;
+    // 매입 시세(보정값 적용 전 기준가의 98%)
+    const goldBuyPerDon = goldRawPerDon * BUY_RATIO_GOLD_24K;
 
     document.getElementById("buyCards").innerHTML =
       buyCardHtml("순금 매입시세", goldBuyPerDon);
