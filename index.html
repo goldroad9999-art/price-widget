@@ -223,6 +223,10 @@ body.compact .loading{
 const OZ_TO_G = 31.1034768;
 const DON = 3.75;
 
+const ADJUST_GOLD = 1.05095;
+const ADJUST_SILVER = 1.40270;
+const ADJUST_PLAT = 1.07371;
+
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
 
@@ -276,10 +280,9 @@ async function render(){
     document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
     document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-    // ✅ 사장님 공식 그대로 적용 (보정값 제거)
-    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON;
-    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON;
-    const platPerDon = (plat.close * fx) / OZ_TO_G * DON;
+    const goldPerDon = (gold.close * fx) / OZ_TO_G * DON * ADJUST_GOLD;
+    const silverPerDon = (silver.close * fx) / OZ_TO_G * DON * ADJUST_SILVER;
+    const platPerDon = (plat.close * fx) / OZ_TO_G * DON * ADJUST_PLAT;
 
     document.getElementById("cards").innerHTML =
       cardHtml("순금 시세", goldPerDon, gold.change_pct) +
@@ -294,10 +297,6 @@ async function render(){
 
 render();
 setInterval(render, 3600000);
-</script>
-
-</body>
-</html>
 </script>
 
 </body>
