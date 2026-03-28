@@ -293,22 +293,69 @@ if (isCompact) {
   document.body.classList.add("compact");
 }
 
+function toNumber(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 async function fetchFx(){
   const r = await fetch("https://open.er-api.com/v6/latest/USD");
   const j = await r.json();
-  return j.rates.KRW;
+
+  const krw = toNumber(j?.rates?.KRW);
+  if (krw === null) {
+    throw new Error("환율 불러오기 실패");
+  }
+
+  return krw;
 }
 
 async function fetchMetal(symbol){
-  const r = await fetch(`/.netlify/functions/metal?symbol=${symbol}`);
-  return r.json();
+  const map = {
+    xauusd: "XAU",
+    xagusd: "XAG",
+    xptusd: "XPT"
+  };
+
+  const converted = map[String(symbol).toLowerCase()] || symbol;
+  const r = await fetch(`/.netlify/functions/metal?symbol=${encodeURIComponent(converted)}`);
+  const j = await r.json();
+
+  if (!r.ok || j?.error) {
+    throw new Error(j?.error || `시세 불러오기 실패 (${symbol})`);
+  }
+
+  const close = toNumber(j?.close);
+  if (close === null) {
+    throw new Error(`유효하지 않은 시세값 (${symbol})`);
+  }
+
+  return {
+    symbol: j?.symbol || String(symbol).toLowerCase(),
+    date: j?.date || "-",
+    close,
+    prev_date: j?.prev_date || null,
+    prev_close: toNumber(j?.prev_close),
+    change: toNumber(j?.change),
+    change_pct: toNumber(j?.change_pct)
+  };
 }
 
 function cardHtml(title, perDonPrice, changePct){
   const perG = perDonPrice / DON;
-  const up = changePct >= 0;
-  const arrow = up ? "▲" : "▼";
-  const cls = up ? "up" : "down";
+
+  let deltaHtml = `<div class="delta">-</div>`;
+
+  if (Number.isFinite(changePct)) {
+    const up = changePct >= 0;
+    const arrow = up ? "▲" : "▼";
+    const cls = up ? "up" : "down";
+
+    deltaHtml = `
+    <div class="delta ${cls}">
+      ${arrow} ${Math.abs(changePct).toFixed(2)}%
+    </div>`;
+  }
 
   return `
   <div class="card">
@@ -316,9 +363,7 @@ function cardHtml(title, perDonPrice, changePct){
     <div class="sub">1돈(3.75g) 기준</div>
     <div class="price">${fmt(perDonPrice)}</div>
     <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
-    <div class="delta ${cls}">
-      ${arrow} ${Math.abs(changePct).toFixed(2)}%
-    </div>
+    ${deltaHtml}
   </div>`;
 }
 
@@ -344,7 +389,7 @@ async function render(){
     ]);
 
     document.getElementById("loading").style.display = "none";
-    document.getElementById("date").textContent = "기준일: " + gold.date;
+    document.getElementById("date").textContent = "기준일: " + (gold.date || "-");
     document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
     document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
