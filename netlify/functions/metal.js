@@ -20,17 +20,16 @@ exports.handler = async (event) => {
       },
     });
 
-    const contentType = r.headers.get("content-type") || "";
     const raw = await r.text();
 
-    // 🔎 디버깅 로그 (Netlify에서 확인 가능)
     console.log("==== STQ FETCH ====");
     console.log("symbol:", symbol);
+    console.log("url:", stooqUrl);
     console.log("status:", r.status, r.statusText);
-    console.log("content-type:", contentType);
-    console.log("preview:", raw.slice(0, 300));
+    console.log("content-type:", r.headers.get("content-type"));
+    console.log("raw length:", raw.length);
+    console.log("raw preview:", JSON.stringify(raw.slice(0, 300)));
 
-    // ❌ HTTP 실패
     if (!r.ok) {
       throw new Error(`upstream http error: ${r.status}`);
     }
@@ -41,21 +40,16 @@ exports.handler = async (event) => {
       throw new Error("empty upstream response");
     }
 
-    // ❌ HTML / 차단 페이지 방어
     if (
       text.startsWith("<!DOCTYPE html") ||
       text.startsWith("<html") ||
-      text.includes("Authorization successful") ||
-      text.includes("Wrong code") ||
-      text.includes("captcha") ||
       text.includes("<body")
     ) {
       throw new Error("upstream returned HTML instead of CSV");
     }
 
-    // ❌ CSV 구조 검증
     if (!text.includes("Date,Open,High,Low,Close")) {
-      throw new Error("unexpected csv format");
+      throw new Error(`unexpected csv format: ${text.slice(0, 120)}`);
     }
 
     const lines = text.split(/\r?\n/).filter(Boolean);
@@ -64,11 +58,9 @@ exports.handler = async (event) => {
       throw new Error(`not enough csv rows: ${lines.length}`);
     }
 
-    // 최신 2개 데이터 찾기
     const rows = [];
     for (let i = lines.length - 1; i >= 1; i--) {
       const parts = lines[i].split(",");
-
       if (parts.length >= 5 && parts[0] && parts[4] && parts[4] !== "Close") {
         rows.push(parts);
         if (rows.length === 2) break;
@@ -89,7 +81,6 @@ exports.handler = async (event) => {
 
     const date = latest[0];
     const close = parseNum(latest[4]);
-
     const prev_date = prev[0];
     const prev_close = parseNum(prev[4]);
 
@@ -121,7 +112,7 @@ exports.handler = async (event) => {
       }),
     };
   } catch (e) {
-    console.error("❌ FUNCTION ERROR:", e);
+    console.error("FUNCTION ERROR:", e);
 
     return {
       statusCode: 500,
