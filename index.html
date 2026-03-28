@@ -278,10 +278,11 @@ const ADJUST_PLAT = 1.07371;
 
 const BUY_RATIO_GOLD_24K = 0.98;
 
-// 회사 기준 순도값
 const BUY_PURITY_24K = 1.0;
 const BUY_PURITY_18K = 0.743;
 const BUY_PURITY_14K = 0.574;
+
+const NETLIFY_BASE = "https://silver-griffin-40cfc0.netlify.app";
 
 const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n)) + "원";
 const fmtFx = n => new Intl.NumberFormat("ko-KR",{maximumFractionDigits:2}).format(n);
@@ -311,15 +312,15 @@ async function fetchFx(){
 }
 
 async function fetchMetal(symbol){
-  const map = {
-    xauusd: "XAU",
-    xagusd: "XAG",
-    xptusd: "XPT"
-  };
+  const r = await fetch(`${NETLIFY_BASE}/.netlify/functions/metal?symbol=${encodeURIComponent(symbol)}`);
+  const text = await r.text();
 
-  const converted = map[String(symbol).toLowerCase()] || symbol;
-  const r = await fetch(`/.netlify/functions/metal?symbol=${encodeURIComponent(converted)}`);
-  const j = await r.json();
+  let j;
+  try {
+    j = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`시세 JSON 오류 (${symbol})`);
+  }
 
   if (!r.ok || j?.error) {
     throw new Error(j?.error || `시세 불러오기 실패 (${symbol})`);
@@ -383,9 +384,9 @@ async function render(){
   try{
     const [fx, gold, silver, plat] = await Promise.all([
       fetchFx(),
-      fetchMetal("xauusd"),
-      fetchMetal("xagusd"),
-      fetchMetal("xptusd")
+      fetchMetal("XAUUSD"),
+      fetchMetal("XAGUSD"),
+      fetchMetal("XPTUSD")
     ]);
 
     document.getElementById("loading").style.display = "none";
@@ -393,12 +394,10 @@ async function render(){
     document.getElementById("fx").textContent = "USD/KRW: " + fmtFx(fx);
     document.getElementById("update").textContent = "업데이트: " + new Date().toLocaleString("ko-KR");
 
-    // 원시 시세(보정 전)
     const goldRawPerDon = (gold.close * fx) / OZ_TO_G * DON;
     const silverRawPerDon = (silver.close * fx) / OZ_TO_G * DON;
     const platRawPerDon = (plat.close * fx) / OZ_TO_G * DON;
 
-    // 판매 시세(보정 적용)
     const goldPerDon = goldRawPerDon * ADJUST_GOLD;
     const silverPerDon = silverRawPerDon * ADJUST_SILVER;
     const platPerDon = platRawPerDon * ADJUST_PLAT;
@@ -408,7 +407,6 @@ async function render(){
       cardHtml("백금 시세", platPerDon, plat.change_pct) +
       cardHtml("은 시세", silverPerDon, silver.change_pct);
 
-    // 매입 시세(보정값 적용 전 기준가 × 회사 기준 순도 × 98%)
     const goldBuyPerDon = goldRawPerDon * BUY_PURITY_24K * BUY_RATIO_GOLD_24K;
     const gold18kBuyPerDon = goldRawPerDon * BUY_PURITY_18K * BUY_RATIO_GOLD_24K;
     const gold14kBuyPerDon = goldRawPerDon * BUY_PURITY_14K * BUY_RATIO_GOLD_24K;
