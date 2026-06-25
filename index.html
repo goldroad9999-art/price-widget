@@ -6,122 +6,245 @@
 <title>오늘의 시세</title>
 
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
-  background:#0f1115;
-  color:#f5f5f5;
+  background:#f4f5f7;
+  color:#111827;
 }
 
 .wrap{
-  max-width:720px;
+  max-width:980px;
   margin:auto;
-  padding:20px;
+  padding:34px 22px;
+}
+
+.header{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:28px;
+  padding:32px;
+  margin-bottom:22px;
+  box-shadow:0 18px 45px rgba(15,23,42,.06);
 }
 
 h1{
-  font-size:22px;
-  font-weight:550;
-  margin-bottom:8px;
-}
-
-h2{
-  font-size:20px;
-  font-weight:600;
-  margin:28px 0 12px;
+  font-size:34px;
+  font-weight:900;
+  margin:0 0 14px;
+  letter-spacing:-0.06em;
 }
 
 .meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:13px;
+  color:#6b7280;
+}
+
+.meta div{
+  background:#f8fafc;
+  border:1px solid #eef0f3;
+  border-radius:999px;
+  padding:8px 12px;
+}
+
+.section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:28px 0 14px;
+}
+
+h2{
+  font-size:18px;
+  font-weight:900;
+  margin:0;
+  letter-spacing:-0.04em;
+}
+
+.badge{
   font-size:12px;
-  color:#a1a1aa;
-  margin-bottom:22px;
-  line-height:1.6;
+  color:#8a6d1d;
+  background:#fff7d6;
+  border:1px solid #f3df91;
+  border-radius:999px;
+  padding:7px 11px;
+  font-weight:700;
 }
 
 .cards{
   display:grid;
-  grid-template-columns:1fr;
-  gap:20px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
 }
 
 .card{
-  background:#171a21;
-  border:1px solid #262b36;
-  border-radius:18px;
+  position:relative;
+  overflow:hidden;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:26px;
   padding:24px;
+  min-height:210px;
+  box-shadow:0 16px 38px rgba(15,23,42,.07);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 24px 52px rgba(15,23,42,.11);
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  right:0;
+  height:6px;
+}
+
+.card.gold::before{
+  background:linear-gradient(90deg,#b8871f,#f6d365,#b8871f);
+}
+
+.card.plat::before{
+  background:linear-gradient(90deg,#7b8794,#d8dee9,#7b8794);
+}
+
+.card.silver::before{
+  background:linear-gradient(90deg,#a8a29e,#e7e5e4,#a8a29e);
+}
+
+.card.k18::before{
+  background:linear-gradient(90deg,#9c6b2f,#d9b46a,#9c6b2f);
+}
+
+.card.k14::before{
+  background:linear-gradient(90deg,#c9a76a,#e8cf9b,#c9a76a);
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
 }
 
 .title{
   font-size:17px;
-  font-weight:600;
+  font-weight:900;
+  color:#111827;
+  letter-spacing:-0.04em;
 }
 
 .sub{
+  font-size:13px;
+  color:#6b7280;
+  margin-top:5px;
+}
+
+.mark{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-size:15px;
-  color:#9ca3af;
-  margin-top:4px;
+  font-weight:900;
+}
+
+.gold .mark{
+  color:#8a5a00;
+  background:#fff4bf;
+}
+
+.plat .mark{
+  color:#475569;
+  background:#f1f5f9;
+}
+
+.silver .mark{
+  color:#57534e;
+  background:#f5f5f4;
+}
+
+.k18 .mark{
+  color:#7c4a12;
+  background:#f7e6bd;
+}
+
+.k14 .mark{
+  color:#8a5a24;
+  background:#f8ead2;
 }
 
 .price{
-  font-size:26px;
-  font-weight:600;
-  margin-top:18px;
-  line-height:1.3;
+  font-size:34px;
+  font-weight:500;
+  margin-top:28px;
+  line-height:1.15;
   word-break:keep-all;
+  letter-spacing:-0.04em;
+  color:#0f172a;
 }
 
 .perg{
-  margin-top:10px;
+  display:inline-flex;
+  gap:6px;
+  align-items:center;
+  margin-top:14px;
   font-size:14px;
-  color:#d1d5db;
-  line-height:1.4;
+  color:#111827;
+  background:#f8fafc;
+  border:1px solid #eef0f3;
+  border-radius:999px;
+  padding:8px 11px;
 }
 
 .perg span{
-  color:#9ca3af;
+  color:#6b7280;
 }
 
 .delta{
   margin-top:12px;
-  font-weight:600;
-  font-size:14px;
+  font-weight:700;
+  font-size:13px;
 }
 
-.up{color:#ff5252;}
-.down{color:#4dabf7;}
+.up{
+  color:#e11d48;
+}
+
+.down{
+  color:#2563eb;
+}
 
 .note{
-  margin-top:28px;
-  font-size:12px;
-  color:#9ca3af;
-  line-height:1.6;
+  margin-top:18px;
+  font-size:13px;
+  color:#6b7280;
+  line-height:1.7;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:20px;
+  padding:16px 18px;
 }
 
 .loading{
   text-align:center;
   padding:40px;
-  color:#9ca3af;
-}
-
-.buy-card{
-  border:1px solid #3a4458;
-  box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;
-}
-
-.buy-card .title,
-.buy-card .price{
-  color:#f5f5f5;
-}
-
-.buy-badge{
-  display:inline-block;
-  font-size:11px;
-  color:#f5f5f5;
-  background:#2b3242;
-  border:1px solid #46506a;
-  padding:4px 8px;
-  border-radius:999px;
-  margin-bottom:10px;
+  color:#6b7280;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:20px;
 }
 
 /* compact 모드 */
@@ -130,61 +253,92 @@ body.compact .wrap{
   padding:10px;
 }
 
-body.compact h1{
-  font-size:18px;
-  margin-bottom:6px;
+body.compact .header{
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:10px;
 }
 
-body.compact h2{
-  font-size:16px;
-  margin:18px 0 8px;
+body.compact h1{
+  font-size:18px;
+  margin-bottom:8px;
 }
 
 body.compact .meta{
-  font-size:12px;
-  margin-bottom:10px;
-  line-height:1.4;
+  gap:5px;
+  font-size:11px;
+}
+
+body.compact .meta div{
+  padding:5px 7px;
+}
+
+body.compact .section-title{
+  margin:14px 0 8px;
+}
+
+body.compact h2{
+  font-size:15px;
+}
+
+body.compact .badge{
+  font-size:10px;
+  padding:5px 7px;
 }
 
 body.compact .cards{
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:8px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
 }
 
 body.compact .card{
   border-radius:14px;
-  padding:12px 10px;
+  padding:12px 9px;
+  min-height:auto;
+  box-shadow:0 8px 18px rgba(15,23,42,.06);
+}
+
+body.compact .card:hover{
+  transform:none;
+}
+
+body.compact .card::before{
+  height:4px;
 }
 
 body.compact .title{
   font-size:13px;
-  font-weight:700;
 }
 
 body.compact .sub{
-  font-size:12px;
-  margin-top:3px;
+  font-size:11px;
+}
+
+body.compact .mark{
+  display:none;
 }
 
 body.compact .price{
-  font-size:18px;
-  margin-top:10px;
+  font-size:17px;
+  margin-top:12px;
 }
 
 body.compact .perg{
   margin-top:8px;
-  font-size:12px;
+  font-size:10px;
+  padding:5px 6px;
 }
 
 body.compact .delta{
   margin-top:8px;
-  font-size:12px;
+  font-size:11px;
 }
 
 body.compact .note{
-  margin-top:12px;
-  font-size:12px;
-  line-height:1.5;
+  margin-top:10px;
+  font-size:11px;
+  padding:10px;
+  border-radius:14px;
 }
 
 body.compact .loading{
@@ -192,45 +346,66 @@ body.compact .loading{
   font-size:12px;
 }
 
-body.compact .buy-badge{
-  font-size:12px;
-  padding:3px 6px;
-  margin-bottom:8px;
+@media (max-width:768px){
+  .cards{
+    grid-template-columns:1fr;
+  }
+
+  .card{
+    min-height:auto;
+  }
 }
 
-@media (max-width: 480px){
+@media (max-width:480px){
+  .wrap{
+    padding:18px 12px;
+  }
+
+  .header{
+    padding:22px;
+    border-radius:22px;
+  }
+
+  h1{
+    font-size:28px;
+  }
+
+  .price{
+    font-size:34px;
+  }
+
   body.compact .wrap{
     padding:8px;
   }
 
   body.compact .cards{
-    grid-template-columns:repeat(3, minmax(0, 1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:6px;
   }
 
   body.compact .card{
-    padding:10px 8px;
+    padding:10px 7px;
     border-radius:12px;
   }
 
   body.compact .title{
-    font-size:16px;
+    font-size:14px;
   }
 
   body.compact .sub{
-    font-size:12px;
+    font-size:10px;
   }
 
   body.compact .price{
-    font-size:16px;
+    font-size:15px;
   }
 
   body.compact .perg{
-    font-size:11px;
+    font-size:9px;
   }
 
   body.compact .delta{
-    font-size:12px;
+    font-size:10px;
   }
 }
 </style>
@@ -239,17 +414,23 @@ body.compact .buy-badge{
 <body>
 <div class="wrap">
 
-<h1> 오늘의 시세</h1>
+<div class="header">
+  <h1>오늘의 시세</h1>
 
-<div class="meta">
-  <div id="date"> 기준일: -</div>
-  <div id="fx"> USD/KRW: -</div>
-  <div id="update"> 업데이트: -</div>
+  <div class="meta">
+    <div id="date">기준일: -</div>
+    <div id="fx">USD/KRW: -</div>
+    <div id="update">업데이트: -</div>
+  </div>
 </div>
 
 <div id="loading" class="loading">시세 불러오는 중...</div>
 
-<h2> [ 판매 시세 (VAT 별도) ]</h2>
+<div class="section-title">
+  <h2>판매 시세</h2>
+  <div class="badge">VAT 별도 · 1돈 기준</div>
+</div>
+
 <div class="cards" id="cards"></div>
 
 <div class="note">
@@ -257,7 +438,11 @@ body.compact .buy-badge{
 ※ 본 시세는 국제 시세 및 환율을 기준으로 산출한 참고가격이며 실제 판매 상품의 가격과는 다를 수 있습니다.
 </div>
 
-<h2> [ 매입 시세 ]</h2>
+<div class="section-title">
+  <h2>매입 시세</h2>
+  <div class="badge">1돈 · 3.75g 기준</div>
+</div>
+
 <div class="cards" id="buyCards"></div>
 
 <div class="note">
@@ -342,7 +527,7 @@ async function fetchMetal(symbol){
   };
 }
 
-function cardHtml(title, perDonPrice, changePct){
+function cardHtml(title, perDonPrice, changePct, type, mark){
   const perG = perDonPrice / DON;
 
   let deltaHtml = `<div class="delta">-</div>`;
@@ -359,24 +544,34 @@ function cardHtml(title, perDonPrice, changePct){
   }
 
   return `
-  <div class="card">
-    <div class="title">${title}</div>
-    <div class="sub">1돈(3.75g) 기준</div>
+  <div class="card ${type}">
+    <div class="card-head">
+      <div>
+        <div class="title">${title}</div>
+        <div class="sub">1돈(3.75g) 기준</div>
+      </div>
+      <div class="mark">${mark}</div>
+    </div>
     <div class="price">${fmt(perDonPrice)}</div>
-    <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
+    <div class="perg"><span>1g 기준가</span> ${fmt(perG)}</div>
     ${deltaHtml}
   </div>`;
 }
 
-function buyCardHtml(title, perDonPrice){
+function buyCardHtml(title, perDonPrice, type, mark){
   const perG = perDonPrice / DON;
 
   return `
-  <div class="card buy-card">
-    <div class="title">${title}</div>
-    <div class="sub">1돈(3.75g) 기준</div>
+  <div class="card ${type}">
+    <div class="card-head">
+      <div>
+        <div class="title">${title}</div>
+        <div class="sub">1돈(3.75g) 기준</div>
+      </div>
+      <div class="mark">${mark}</div>
+    </div>
     <div class="price">${fmt(perDonPrice)}</div>
-    <div class="perg"><span>1g 기준가:</span> ${fmt(perG)}</div>
+    <div class="perg"><span>1g 기준가</span> ${fmt(perG)}</div>
   </div>`;
 }
 
@@ -403,18 +598,18 @@ async function render(){
     const platPerDon = platRawPerDon * ADJUST_PLAT;
 
     document.getElementById("cards").innerHTML =
-      cardHtml("순금 시세", goldPerDon, gold.change_pct) +
-      cardHtml("백금 시세", platPerDon, plat.change_pct) +
-      cardHtml("은 시세", silverPerDon, silver.change_pct);
+      cardHtml("순금 시세", goldPerDon, gold.change_pct, "gold", "Au") +
+      cardHtml("백금 시세", platPerDon, plat.change_pct, "plat", "Pt") +
+      cardHtml("은 시세", silverPerDon, silver.change_pct, "silver", "Ag");
 
     const goldBuyPerDon = goldRawPerDon * BUY_PURITY_24K * BUY_RATIO_GOLD_24K;
     const gold18kBuyPerDon = goldRawPerDon * BUY_PURITY_18K * BUY_RATIO_GOLD_24K;
     const gold14kBuyPerDon = goldRawPerDon * BUY_PURITY_14K * BUY_RATIO_GOLD_24K;
 
     document.getElementById("buyCards").innerHTML =
-      buyCardHtml("순금 매입시세", goldBuyPerDon) +
-      buyCardHtml("18K 매입시세", gold18kBuyPerDon) +
-      buyCardHtml("14K 매입시세", gold14kBuyPerDon);
+      buyCardHtml("순금 매입시세", goldBuyPerDon, "gold", "24") +
+      buyCardHtml("18K 매입시세", gold18kBuyPerDon, "k18", "18") +
+      buyCardHtml("14K 매입시세", gold14kBuyPerDon, "k14", "14");
 
   } catch(e){
     document.getElementById("loading").textContent = "시세 불러오기 실패";
